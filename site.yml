@@ -1,0 +1,49 @@
+---
+- name: Estuary postgres loadbalancer nodes
+  hosts: loadbalancer
+  become: true # Not needed for root but we won't use root later
+
+  vars:
+    pacemaker_cluster_constraints:
+      - constraint: 'colocation'
+        action: 'add'
+        source_resource_id: 'loadbalancer'
+        target_resource_id: 'virtual_ip'
+        score: 'INFINITY'
+      - constraint: 'order'
+        order:
+          first_resource: 'virtual_ip'
+          first_resource_action: 'start'
+          second_resource: 'loadbalancer'
+          second_resource_action: 'start'
+    pacemaker_cluster_resources:
+      - resource_id: 'virtual_ip'
+        action: 'create'
+        provider: 'ocf:heartbeat:IPaddr2'
+        options:
+          - 'ip=10.1.3.1'
+          - 'cidr_netmask=16'
+        op: 'monitor'
+        op_options:
+          - 'interval=30s'
+      - resource_id: 'loadbalancer'
+        action: 'create'
+        provider: 'lsb:haproxy'
+        op: 'monitor'
+        op_options:
+          - 'timeout=5s'
+          - 'interval=5s'
+    pacemaker_cluster_settings:
+      - property: 'start-failure-is-fatal'
+        value: 'false'
+      - property: 'pe-warn-series-max'
+        value: 1000
+      - property: 'pe-input-series-max'
+        value: 1000
+      - property: 'pe-error-series-max'
+        value: 1000
+      - property: 'cluster-recheck-interval'
+        value: 5min
+  roles:
+    - haproxy
+    - mrlesmithjr.pacemaker
