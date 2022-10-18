@@ -1,3 +1,18 @@
+[etcd]
+estuary-pg01 ansible_host=10.1.3.21
+estuary-pg02 ansible_host=10.1.3.22
+estuary-pg03 ansible_host=10.1.3.23
+
+[etcd_master]
+estuary-pg01 ansible_host=10.1.3.21
+estuary-pg02 ansible_host=10.1.3.22
+estuary-pg03 ansible_host=10.1.3.23
+
+[postgresql]
+estuary-pg01 ansible_host=10.1.3.21
+estuary-pg02 ansible_host=10.1.3.22
+estuary-pg03 ansible_host=10.1.3.23
+
 [loadbalancer]
 estuary-lb01 ansible_host=10.1.3.11
 estuary-lb02 ansible_host=10.1.3.12

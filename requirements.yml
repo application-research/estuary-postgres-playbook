@@ -1,2 +1,4 @@
 ---
 - name: zorlin.pacemaker
+- name: kostiantyn-nemchenko.patroni
+- name: andrewrothstein.etcd-cluster

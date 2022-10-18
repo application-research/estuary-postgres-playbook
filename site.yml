@@ -51,3 +51,22 @@
   roles:
     - haproxy
     - zorlin.pacemaker
+
+- name: Estuary postgres etcd nodes
+  hosts: etcd
+  become: true # Not needed for root but we won't use root later
+  remote_user: root
+
+  roles:
+    - role: andrewrothstein.etcd-cluster
+
+- name: Estuary postgres postgres nodes
+  hosts: postgresql
+  become: true # Not needed for root but we won't use root later
+  remote_user: root
+
+  vars:
+    patroni_install_haproxy: false
+
+  roles:
+    - role: kostiantyn-nemchenko.patroni
