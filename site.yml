@@ -50,4 +50,4 @@
         value: 5min
   roles:
     - haproxy
-    - mrlesmithjr.pacemaker
+    - zorlin.pacemaker
