@@ -2,7 +2,7 @@
 - name: Install haproxy
   package:
     name: haproxy
-    state: installed
+    state: present
 
 - name: Configure haproxy
   template:

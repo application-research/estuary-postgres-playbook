@@ -2,6 +2,7 @@
 - name: Estuary postgres loadbalancer nodes
   hosts: loadbalancer
   become: true # Not needed for root but we won't use root later
+  remote_user: root
 
   vars:
     pacemaker_cluster_constraints:
