@@ -5,6 +5,9 @@
   remote_user: root
 
   vars:
+    corosync_expected_votes: "{{ ( groups[pacemaker_cluster_group]|count /2 ) | round (0, 'ceil') | int }}"
+    corosync_bindnet_interface: 'eth0'
+    pacemaker_cluster_group: 'loadbalancer'
     pacemaker_cluster_constraints:
       - constraint: 'colocation'
         action: 'add'
