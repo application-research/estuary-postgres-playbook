@@ -70,6 +70,7 @@
   remote_user: root
 
   vars:
+    patroni_system_group: postgres
     patroni_install_haproxy: false
     patroni_install_watchdog_loader: false
     patroni_postgresql_version: 14
@@ -86,5 +87,6 @@
 
 
   roles:
+    - patroni_system_user
     - patroni_certs
     - role: zorlin.patroni
