@@ -69,6 +69,9 @@
   become: true # Not needed for root but we won't use root later
   remote_user: root
 
+  vars_files:
+    - vars/secret.yml
+
   vars:
     patroni_system_group: postgres
     patroni_install_haproxy: false
