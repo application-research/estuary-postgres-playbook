@@ -59,7 +59,7 @@
 
   roles:
     - role: andrewrothstein.etcd-cluster
-      etcd_secure: True
+      etcd_secure: true
 
   vars:
     etcd_cluster_name: postgresql
@@ -71,7 +71,20 @@
 
   vars:
     patroni_install_haproxy: false
+    patroni_install_watchdog_loader: false
     patroni_postgresql_version: 14
+    patroni_etcd_hosts: "{% for host in groups['postgresql'] %}{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
+    patroni_etcd_protocol: https
+    patroni_etcd_cacert: "/var/lib/patroni.pki/ca.pem"
+    patroni_etcd_cert: "/var/lib/patroni.pki/{{ inventory_hostname }}.pem"
+    patroni_etcd_key: "/var/lib/patroni.pki/{{ inventory_hostname }}-key.pem"
+    patroni_postgresql_pg_hba:
+      - { type: "local", database: "all", user: "all", method: "peer" }
+      - { type: "host", database: "all", user: "postgres", address: "10.1.3.0/24", method: "md5" }
+      - { type: "host", database: "all", user: "all", address: "10.1.3.0/24", method: "ident", options: "map=omicron" }
+      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "10.1.3.0/24", method: "md5" }
+
 
   roles:
+    - patroni_certs
     - role: zorlin.patroni

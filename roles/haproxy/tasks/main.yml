@@ -1,20 +1,20 @@
 ---
 - name: Install haproxy
-  package:
+  ansible.builtin.package:
     name: haproxy
     state: present
 
 - name: Configure haproxy
-  template:
+  ansible.builtin.template:
     src: haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
     owner: root
     group: root
     mode: 0644
-  notify: reload haproxy
+  notify: Reload haproxy
 
 - name: Ensure haproxy is started
-  systemd:
+  ansible.builtin.systemd:
     name: haproxy
     state: started
     enabled: true

@@ -41,6 +41,7 @@ listen stats
 
 listen postgres
     bind *:5432
+    mode tcp
     option httpchk
     http-check expect status 200
     default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
