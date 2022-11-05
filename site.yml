@@ -4,9 +4,13 @@
   become: true # Not needed for root but we won't use root later
   remote_user: root
 
+  vars_files:
+    - vars/secrets.yml
+
   vars:
     corosync_expected_votes: "{{ ( groups[pacemaker_cluster_group]|count /2 ) | round (0, 'ceil') | int }}"
-    corosync_bindnet_interface: 'eth0'
+    corosync_bindnet_interface: 'bond0_0'
+    corosync_cluster_name: 'db-loadbalancer'
     pacemaker_cluster_group: 'loadbalancer'
     pacemaker_cluster_constraints:
       - constraint: 'colocation'
@@ -25,8 +29,9 @@
         action: 'create'
         provider: 'ocf:heartbeat:IPaddr2'
         options:
-          - 'ip=10.1.3.1'
-          - 'cidr_netmask=16'
+          - 'ip={{ elastic_ip_lb }}'
+          - 'cidr_netmask=32'
+          - 'nic=bond0'
         op: 'monitor'
         op_options:
           - 'interval=30s'
@@ -70,23 +75,23 @@
   remote_user: root
 
   vars_files:
-    - vars/secret.yml
+    - vars/secrets.yml
 
   vars:
     patroni_system_group: postgres
     patroni_install_haproxy: false
     patroni_install_watchdog_loader: false
     patroni_postgresql_version: 14
-    patroni_etcd_hosts: "{% for host in groups['postgresql'] %}{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
+    patroni_etcd_hosts: "{% for host in groups['postgresql'] %}{{ hostvars[host]['ansible_bond0_0']['ipv4']['address'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
     patroni_etcd_protocol: https
     patroni_etcd_cacert: "/var/lib/patroni.pki/ca.pem"
     patroni_etcd_cert: "/var/lib/patroni.pki/{{ inventory_hostname }}.pem"
     patroni_etcd_key: "/var/lib/patroni.pki/{{ inventory_hostname }}-key.pem"
     patroni_postgresql_pg_hba:
       - { type: "local", database: "all", user: "all", method: "peer" }
-      - { type: "host", database: "all", user: "postgres", address: "10.1.3.0/24", method: "md5" }
-      - { type: "host", database: "all", user: "all", address: "10.1.3.0/24", method: "ident", options: "map=omicron" }
-      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "10.1.3.0/24", method: "md5" }
+      - { type: "host", database: "all", user: "postgres", address: "{{ internal_subnet }}", method: "md5" }
+      - { type: "host", database: "all", user: "all", address: "{{ internal_subnet }}", method: "ident", options: "map=omicron" }
+      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "{{ internal_subnet }}", method: "md5" }
 
 
   roles:
