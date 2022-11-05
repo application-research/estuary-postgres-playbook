@@ -15,14 +15,14 @@
     pacemaker_cluster_constraints:
       - constraint: 'colocation'
         action: 'add'
-        source_resource_id: 'loadbalancer'
+        source_resource_id: 'loadbalancer-clone'
         target_resource_id: 'virtual_ip'
         score: 'INFINITY'
       - constraint: 'order'
         order:
           first_resource: 'virtual_ip'
           first_resource_action: 'start'
-          second_resource: 'loadbalancer'
+          second_resource: 'loadbalancer-clone'
           second_resource_action: 'start'
     pacemaker_cluster_resources:
       - resource_id: 'virtual_ip'
@@ -42,6 +42,7 @@
         op_options:
           - 'timeout=5s'
           - 'interval=5s'
+          - 'clone'
     pacemaker_cluster_settings:
       - property: 'start-failure-is-fatal'
         value: 'false'
