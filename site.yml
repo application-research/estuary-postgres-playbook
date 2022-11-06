@@ -12,18 +12,7 @@
     corosync_bindnet_interface: 'bond0_0'
     corosync_cluster_name: 'db-loadbalancer'
     pacemaker_cluster_group: 'loadbalancer'
-    pacemaker_cluster_constraints:
-      - constraint: 'colocation'
-        action: 'add'
-        source_resource_id: 'loadbalancer-clone'
-        target_resource_id: 'virtual_ip'
-        score: 'INFINITY'
-      - constraint: 'order'
-        order:
-          first_resource: 'virtual_ip'
-          first_resource_action: 'start'
-          second_resource: 'loadbalancer-clone'
-          second_resource_action: 'start'
+    pacemaker_cluster_constraints: {}
     pacemaker_cluster_resources:
       - resource_id: 'virtual_ip'
         action: 'create'
@@ -68,7 +57,9 @@
       etcd_secure: true
 
   vars:
+    etcd_cluster: "{% for host in groups[etcd_master_group_name] %}{{ hostvars[host]['ansible_nodename'] }}={{ etcd_scheme }}{{ hostvars[host]['etcd_address_cluster'] }}:{{ etcd_port_peer }}{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable-line rule:line-length
     etcd_cluster_name: postgresql
+    etcd_iface_cluster: bond0_0
 
 - name: Estuary postgres postgres nodes
   hosts: postgresql
@@ -83,17 +74,21 @@
     patroni_install_haproxy: false
     patroni_install_watchdog_loader: false
     patroni_postgresql_version: 14
-    patroni_etcd_hosts: "{% for host in groups['postgresql'] %}{{ hostvars[host]['ansible_bond0_0']['ipv4']['address'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
+    patroni_etcd_hosts: "{% for host in groups['postgresql'] %}{{ hostvars[host]['ansible_bond0_0']['ipv4']['address'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable-line rule:line-length
     patroni_etcd_protocol: https
     patroni_etcd_cacert: "/var/lib/patroni.pki/ca.pem"
     patroni_etcd_cert: "/var/lib/patroni.pki/{{ inventory_hostname }}.pem"
     patroni_etcd_key: "/var/lib/patroni.pki/{{ inventory_hostname }}-key.pem"
+    patroni_postgresql_connect_address: "{{ ansible_bond0_0.ipv4.address }}:5432"
+    patroni_restapi_connect_address: "{{ ansible_bond0_0.ipv4.address }}:{{ patroni_restapi_port }}"
     patroni_postgresql_pg_hba:
       - { type: "local", database: "all", user: "all", method: "peer" }
       - { type: "host", database: "all", user: "postgres", address: "{{ internal_subnet }}", method: "md5" }
       - { type: "host", database: "all", user: "all", address: "{{ internal_subnet }}", method: "ident", options: "map=omicron" }
+      - { type: "host", database: "all", user: "all", address: "147.28.182.121/32", method: "scram-sha-256" }
+      - { type: "host", database: "all", user: "all", address: "145.40.77.221/32", method: "scram-sha-256" }
+      - { type: "host", database: "all", user: "all", address: "139.178.82.115/32", method: "scram-sha-256" }
       - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "{{ internal_subnet }}", method: "md5" }
-
 
   roles:
     - patroni_system_user

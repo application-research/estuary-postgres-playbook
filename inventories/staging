@@ -1,20 +1,19 @@
 [etcd]
-estuary-pg01 ansible_host=147.28.141.49
-estuary-pg02 ansible_host=147.28.141.245
-estuary-pg03 ansible_host=147.28.141.33
+db-staging-pg01 ansible_host=147.75.35.93
+db-staging-pg02 ansible_host=147.75.35.95
+db-staging-pg03 ansible_host=147.28.141.19
 
 [etcd_master]
-estuary-pg01 ansible_host=147.28.141.49
-estuary-pg02 ansible_host=147.28.141.245
-estuary-pg03 ansible_host=147.28.141.33
+db-staging-pg01 ansible_host=147.75.35.93
+db-staging-pg02 ansible_host=147.75.35.95
+db-staging-pg03 ansible_host=147.28.141.19
 
 [postgresql]
-estuary-pg01 ansible_host=147.28.141.49
-estuary-pg02 ansible_host=147.28.141.245
-estuary-pg03 ansible_host=147.28.141.33
+db-staging-pg01 ansible_host=147.75.35.93
+db-staging-pg02 ansible_host=147.75.35.95
+db-staging-pg03 ansible_host=147.28.141.19
 
 [loadbalancer]
-estuary-lb01 ansible_host=147.28.182.121
-estuary-lb02 ansible_host=147.28.141.15
-estuary-lb03 ansible_host=147.28.141.19
-
+db-staging-lb01 ansible_host=147.28.182.121
+db-staging-lb02 ansible_host=145.40.77.221
+db-staging-lb03 ansible_host=139.178.82.115
