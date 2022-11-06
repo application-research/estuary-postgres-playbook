@@ -2,4 +2,5 @@
 - name: zorlin.pacemaker
 #- name: kostiantyn-nemchenko.patroni
 - name: zorlin.patroni
-- name: andrewrothstein.etcd-cluster
+#- name: andrewrothstein.etcd-cluster
+- name: zorlin.etcd_cluster

@@ -58,7 +58,7 @@
     etcd_iface_cluster: bond0_0
 
   roles:
-    - role: andrewrothstein.etcd-cluster
+    - role: zorlin.etcd_cluster
       etcd_secure: true
 
 - name: Estuary postgres postgres nodes
