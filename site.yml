@@ -45,6 +45,7 @@
         value: 5min
   roles:
     - haproxy
+    - { role: equinix_uuid, when: not equinix_uuid | bool }
     - zorlin.pacemaker
 
 - name: Estuary postgres etcd nodes
@@ -85,7 +86,7 @@
       - { type: "local", database: "all", user: "all", method: "peer" }
       - { type: "host", database: "all", user: "postgres", address: "{{ internal_subnet }}", method: "md5" }
       - { type: "host", database: "all", user: "all", address: "{{ internal_subnet }}", method: "ident", options: "map=omicron" }
-      - { type: "host", database: "all", user: "all", address: "147.28.182.121/32", method: "scram-sha-256" }
+      - { type: "host", database: "all", user: "all", address: "145.40.102.111/32", method: "scram-sha-256" }
       - { type: "host", database: "all", user: "all", address: "145.40.77.221/32", method: "scram-sha-256" }
       - { type: "host", database: "all", user: "all", address: "139.178.82.115/32", method: "scram-sha-256" }
       - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "{{ internal_subnet }}", method: "md5" }
