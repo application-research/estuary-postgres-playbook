@@ -10,9 +10,14 @@
   vars:
     corosync_expected_votes: "{{ ( groups[pacemaker_cluster_group]|count /2 ) | round (0, 'ceil') | int }}"
     corosync_bindnet_interface: 'bond0_0'
-    corosync_cluster_name: 'db-loadbalancer'
+    corosync_cluster_name: 'loadbalancer'
     pacemaker_cluster_group: 'loadbalancer'
-    pacemaker_cluster_constraints: {}
+    pacemaker_cluster_constraints:
+      - constraint: 'colocation'
+        action: 'add'
+        source_resource_id: 'virtual_ip'
+        target_resource_id: 'elastic_ip_metal'
+        score: 'INFINITY'
     pacemaker_cluster_resources:
       - resource_id: 'virtual_ip'
         action: 'create'
@@ -21,6 +26,14 @@
           - 'ip={{ elastic_ip_lb }}'
           - 'cidr_netmask=32'
           - 'nic=bond0'
+        op: 'monitor'
+        op_options:
+          - 'interval=30s'
+      - resource_id: 'elastic_ip_metal'
+        action: 'create'
+        provider: 'ocf:equinix:equinix-floating-ip'
+        options:
+          - 'ip={{ elastic_ip_lb }}'
         op: 'monitor'
         op_options:
           - 'interval=30s'
