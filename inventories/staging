@@ -1,3 +1,13 @@
+[estuary]
+staging-api01 ansible_host=139.178.86.35
+staging-api02 ansible_host=139.178.86.53
+staging-api03 ansible_host=139.178.86.3
+
+[estuary_main]
+staging-api01 ansible_host=139.178.86.35
+staging-api02 ansible_host=139.178.86.53
+staging-api03 ansible_host=139.178.86.3
+
 [etcd]
 staging-db01 ansible_host=147.75.35.93 equinix_uuid=182c00d4-d11c-4c36-a801-5f2b7b1f160a
 staging-db02 ansible_host=147.75.35.95 equinix_uuid=0fdb21dd-a6d0-491a-92d8-c046fce5c52b
