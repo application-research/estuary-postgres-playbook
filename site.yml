@@ -28,16 +28,16 @@
           - 'nic=bond0'
         op: 'monitor'
         op_options:
-          - 'interval=30s'
+          - 'interval=8s'
       - resource_id: 'elastic_ip_metal'
         action: 'create'
-        provider: 'ocf:equinix:equinix-floating-ip'
+        provider: 'ocf:equinix:equinix-elastic-ip'
         options:
           - 'ip={{ elastic_ip_lb }}'
           - 'subnet={{ elastic_ip_subnet }}'
         op: 'monitor'
         op_options:
-          - 'interval=30s'
+          - 'interval=8s'
       - resource_id: 'loadbalancer'
         action: 'create'
         provider: 'lsb:haproxy'
