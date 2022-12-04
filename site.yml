@@ -139,6 +139,7 @@
     patroni_postgresql_pg_hba:
       - { type: "local", database: "all", user: "all", method: "peer" }
       - { type: "host", database: "all", user: "postgres", address: "{{ internal_subnet }}", method: "md5" }
+      - { type: "host", database: "estuary", user: "estuary", address: "{{ internal_subnet }}", method: "scram-sha-256" }
       - { type: "host", database: "all", user: "all", address: "{{ internal_subnet }}", method: "ident", options: "map=omicron" }
       - { type: "host", database: "all", user: "all", address: "139.178.81.229/32", method: "scram-sha-256" }
       - { type: "host", database: "all", user: "all", address: "147.28.148.185/32", method: "scram-sha-256" }
