@@ -34,6 +34,7 @@
         provider: 'ocf:equinix:equinix-floating-ip'
         options:
           - 'ip={{ elastic_ip_lb }}'
+          - 'subnet={{ elastic_ip_subnet }}'
         op: 'monitor'
         op_options:
           - 'interval=30s'
@@ -59,6 +60,7 @@
   roles:
     - haproxy
     - { role: equinix_uuid, when: not equinix_uuid | bool }
+    - equinix_elastic_ip
     - zorlin.pacemaker
 
 - name: Estuary postgres etcd nodes
