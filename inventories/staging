@@ -1,19 +1,19 @@
 [etcd]
-db-staging-pg01 ansible_host=147.75.35.93 equinix_uuid=182c00d4-d11c-4c36-a801-5f2b7b1f160a
-db-staging-pg02 ansible_host=147.75.35.95 equinix_uuid=0fdb21dd-a6d0-491a-92d8-c046fce5c52b
-db-staging-pg03 ansible_host=147.28.141.19 equinix_uuid=8b831128-3905-4b9a-9e56-18fc9967a0c3
+staging-db01 ansible_host=147.75.35.93 equinix_uuid=182c00d4-d11c-4c36-a801-5f2b7b1f160a
+staging-db02 ansible_host=147.75.35.95 equinix_uuid=0fdb21dd-a6d0-491a-92d8-c046fce5c52b
+staging-db03 ansible_host=147.28.141.19 equinix_uuid=8b831128-3905-4b9a-9e56-18fc9967a0c3
 
 [etcd_master]
-db-staging-pg01 ansible_host=147.75.35.93 equinix_uuid=182c00d4-d11c-4c36-a801-5f2b7b1f160a
-db-staging-pg02 ansible_host=147.75.35.95 equinix_uuid=0fdb21dd-a6d0-491a-92d8-c046fce5c52b
-db-staging-pg03 ansible_host=147.28.141.19 equinix_uuid=8b831128-3905-4b9a-9e56-18fc9967a0c3
+staging-db01 ansible_host=147.75.35.93 equinix_uuid=182c00d4-d11c-4c36-a801-5f2b7b1f160a
+staging-db02 ansible_host=147.75.35.95 equinix_uuid=0fdb21dd-a6d0-491a-92d8-c046fce5c52b
+staging-db03 ansible_host=147.28.141.19 equinix_uuid=8b831128-3905-4b9a-9e56-18fc9967a0c3
 
 [postgresql]
-db-staging-pg01 ansible_host=147.75.35.93 equinix_uuid=182c00d4-d11c-4c36-a801-5f2b7b1f160a
-db-staging-pg02 ansible_host=147.75.35.95 equinix_uuid=0fdb21dd-a6d0-491a-92d8-c046fce5c52b
-db-staging-pg03 ansible_host=147.28.141.19 equinix_uuid=8b831128-3905-4b9a-9e56-18fc9967a0c3
+staging-db01 ansible_host=147.75.35.93 equinix_uuid=182c00d4-d11c-4c36-a801-5f2b7b1f160a
+staging-db02 ansible_host=147.75.35.95 equinix_uuid=0fdb21dd-a6d0-491a-92d8-c046fce5c52b
+staging-db03 ansible_host=147.28.141.19 equinix_uuid=8b831128-3905-4b9a-9e56-18fc9967a0c3
 
 [loadbalancer]
-db-staging-lb01 ansible_host=145.40.102.111 equinix_uuid=01ee4ca1-c049-4a82-bf0d-8125634aebc8
-db-staging-lb02 ansible_host=145.40.77.221 equinix_uuid=9f86eb37-ceef-418e-aca9-330d97ab6e8c
-db-staging-lb03 ansible_host=139.178.82.115 equinix_uuid=7dec90e8-6311-46cb-8bd9-2bd6c2d02864
+staging-lb01 ansible_host=145.40.102.111 equinix_uuid=01ee4ca1-c049-4a82-bf0d-8125634aebc8
+staging-lb02 ansible_host=145.40.77.221 equinix_uuid=9f86eb37-ceef-418e-aca9-330d97ab6e8c
+staging-lb03 ansible_host=139.178.82.115 equinix_uuid=7dec90e8-6311-46cb-8bd9-2bd6c2d02864
