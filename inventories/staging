@@ -24,9 +24,9 @@ staging-db02 ansible_host=147.75.35.95 equinix_uuid=0fdb21dd-a6d0-491a-92d8-c046
 staging-db03 ansible_host=147.28.141.19 equinix_uuid=8b831128-3905-4b9a-9e56-18fc9967a0c3
 
 [loadbalancer]
-staging-lb01 ansible_host=145.40.102.111 equinix_uuid=01ee4ca1-c049-4a82-bf0d-8125634aebc8
-staging-lb02 ansible_host=145.40.77.221 equinix_uuid=9f86eb37-ceef-418e-aca9-330d97ab6e8c
-staging-lb03 ansible_host=139.178.82.115 equinix_uuid=7dec90e8-6311-46cb-8bd9-2bd6c2d02864
+staging-lb01 ansible_host=147.28.182.121 equinix_uuid=f5b71b7c-af4f-4f90-be90-402df8025990
+staging-lb02 ansible_host=147.28.182.97 equinix_uuid=aa58ac6e-d0bf-43c8-8e3f-2db18c43773a
+staging-lb03 ansible_host=147.28.182.99 equinix_uuid=aa9c15c3-90bf-477d-a781-3f9db8c2c0a7
 
 [gather:children]
 postgresql
