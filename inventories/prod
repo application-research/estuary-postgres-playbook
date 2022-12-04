@@ -14,3 +14,6 @@ prod-db02 ansible_host=147.28.148.185 equinix_uuid=93d07161-23bb-49ee-9684-cabc8
 prod-db03 ansible_host=139.178.81.169 equinix_uuid=128e0c8c-e35c-431c-989c-6935a7171dd7
 
 [loadbalancer]
+prod-lb01 ansible_host=147.28.154.167 equinix_uuid=6b9bf781-5d42-4996-b106-ba234c4ffb34
+prod-lb02 ansible_host=145.40.99.223 equinix_uuid=f62d7656-0139-4543-9025-a8b04f576d5a
+prod-lb03 ansible_host=147.28.154.147 equinix_uuid=9fb39180-d135-4645-a810-5cfbe353e135
