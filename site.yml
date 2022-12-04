@@ -1,6 +1,6 @@
 ---
-- name: Gather PostgreSQL node facts
-  hosts: postgresql
+- name: Gather special node facts
+  hosts: gather
   become: true
   gather_facts: false
   remote_user: root
@@ -33,6 +33,11 @@
         action: 'add'
         source_resource_id: 'virtual_ip'
         target_resource_id: 'elastic_ip_metal'
+        score: 'INFINITY'
+      - constraint: 'colocation'
+        action: 'add'
+        source_resource_id: 'virtual_ip_public'
+        target_resource_id: 'elastic_ip_metal_public'
         score: 'INFINITY'
     pacemaker_cluster_resources:
       - resource_id: 'virtual_ip'
