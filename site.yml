@@ -1,4 +1,14 @@
 ---
+- name: Gather PostgreSQL node facts
+  hosts: postgresql
+  become: true
+  gather_facts: false
+  remote_user: root
+
+  tasks:
+    - name: Gather all facts
+      ansible.builtin.setup:
+
 - name: Estuary postgres loadbalancer nodes
   hosts: loadbalancer
   become: true # Not needed for root but we won't use root later
@@ -6,6 +16,12 @@
 
   vars_files:
     - vars/secrets.yml
+
+  # pre_tasks:
+  #   - name: Gather facts
+  #     ansible.builtin.setup:
+  #     delegate_to: "{{ item }}"
+  #     with_items: "{{ groups['postgresql'] }}"
 
   vars:
     corosync_expected_votes: "{{ ( groups[pacemaker_cluster_group]|count /2 ) | round (0, 'ceil') | int }}"

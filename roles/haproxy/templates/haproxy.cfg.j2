@@ -39,12 +39,50 @@ listen stats
     stats enable
     stats uri /
 
-listen postgres
-    bind *:5432
-    mode tcp
+frontend http
+    bind *:80
+    mode http
+    option tcplog
+    acl api hdr(Host) -i api.haapi.tech
+    acl api hdr(Host) -i api.estuary.tech
+    acl web hdr(Host) -i haapi.tech
+    acl web hdr(Host) -i estuary.tech
+    use_backend api if api
+    use_backend web if web
+    default_backend blackhole
+
+frontend database
+	bind *:5432
+	mode tcp
+	default_backend postgres
+
+# Send all traffic not specifically destined for a destination to an invalid port.
+backend blackhole
+	server blackhole 127.0.0.1:443 verify none
+
+backend api
     option httpchk
+    http-check send meth GET  uri /health
     http-check expect status 200
     default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+    server api1 139.178.86.35:3004 check
+    server api2 139.178.86.53:3004 check
+    server api3 139.178.86.3:3004 check
+
+backend web
+    option httpchk
+    balance source
+    http-check expect status 200
+    default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+    server web1 147.28.182.121:4444 check
+    server web2 147.28.182.97:4444 check
+    server web3 147.28.182.99:4444 check
+
+backend postgres
+	balance leastconn
+	option httpchk
+    http-check expect status 200
+	default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
 {% for node in groups.postgresql %}
-    server postgres{{ loop.index }} {{ hostvars[node].ansible_host }}:5432 maxconn 100 check port 8008
+    server postgres{{ loop.index }} {{ hostvars[node]["ansible_bond0_0"]["ipv4"]["address"]}}:5432 maxconn 100 check port 8008
 {% endfor %}
