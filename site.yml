@@ -54,6 +54,24 @@
         op: 'monitor'
         op_options:
           - 'interval=8s'
+      - resource_id: 'virtual_ip_public'
+        action: 'create'
+        provider: 'ocf:heartbeat:IPaddr2'
+        options:
+          - 'ip={{ elastic_ip_lb_public }}'
+          - 'cidr_netmask=32'
+          - 'nic=bond0'
+        op: 'monitor'
+        op_options:
+          - 'interval=8s'
+      - resource_id: 'elastic_ip_metal_public'
+        action: 'create'
+        provider: 'ocf:equinix:equinix-elastic-ip-public'
+        options:
+          - 'ip={{ elastic_ip_lb_public }}'
+        op: 'monitor'
+        op_options:
+          - 'interval=8s'
       - resource_id: 'loadbalancer'
         action: 'create'
         provider: 'lsb:haproxy'
