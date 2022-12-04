@@ -70,9 +70,9 @@ backend api
     http-check send meth GET  uri /health
     http-check expect status 200
     default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
-    server api1 139.178.86.35:3004 check
-    server api2 139.178.86.53:3004 check
-    server api3 139.178.86.3:3004 check
+    server api1 10.70.197.155:3004 check
+    server api2 10.70.197.157:3004 check
+    server api3 10.70.197.153:3004 check
 
 backend web
     option httpchk
@@ -98,3 +98,4 @@ backend postgres_read
 {% for node in groups.postgresql %}
     server postgres{{ loop.index }} {{ hostvars[node]["ansible_bond0_0"]["ipv4"]["address"]}}:5432 maxconn 100
 {% endfor %}
+
