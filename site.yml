@@ -58,7 +58,7 @@
           - 'subnet={{ elastic_ip_subnet }}'
         op: 'monitor'
         op_options:
-          - 'interval=14s'
+          - 'timeout=60s interval=30s'
       - resource_id: 'virtual_ip_public'
         action: 'create'
         provider: 'ocf:heartbeat:IPaddr2'
@@ -76,7 +76,7 @@
           - 'ip={{ elastic_ip_lb_public }}'
         op: 'monitor'
         op_options:
-          - 'interval=14s'
+          - 'timeout=60s interval=30s'
       - resource_id: 'loadbalancer'
         action: 'create'
         provider: 'lsb:haproxy'
