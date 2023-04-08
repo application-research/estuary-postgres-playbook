@@ -1,0 +1,4 @@
+---
+# Vars needed for EBI postgres
+
+internal_subnet: "10.24.0.0/16"
