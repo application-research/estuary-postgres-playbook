@@ -48,8 +48,10 @@
       - { type: "host", database: "all", user: "all", address: "139.178.81.229/32", method: "scram-sha-256" }
       - { type: "host", database: "all", user: "all", address: "147.28.148.185/32", method: "scram-sha-256" }
       - { type: "host", database: "all", user: "all", address: "139.178.81.169/32", method: "scram-sha-256" }
-      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "{{ internal_subnet }}", method: "md5" }
-      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "127.0.0.1/32", method: "md5" }
+      - { type: "host", database: "all", user: "all", address: "139.178.81.169/32", method: "scram-sha-256" }
+      - { type: "host", database: "all", user: "all", address: "10.24.6.214/32", method: "scram-sha-256" } # Nautobot server
+      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "{{ internal_subnet }}", method: "md5" } # Allow Patroni replication
+      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "127.0.0.1/32", method: "md5" } # Allow local Patroni access
     # Careful with this bit.
     # patroni_bootstrap_dcs_slots:
     #   - { name: "patroni", type: "physical" }
