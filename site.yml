@@ -66,11 +66,6 @@
   become: true
 
   pre_tasks:
-    - name: Install jmespath
-      ansible.builtin.package:
-        name: python3-jmespath
-        state: present
-
     - name: Parse Patroni output to find who the current leader is and set it per cluster
       delegate_to: localhost
       connection: local
@@ -87,7 +82,7 @@
       delegate_to: localhost
       connection: local
       ansible.builtin.set_fact:
-        patroni_master: "{{ patroni_output_item.content | from_json | json_query('members[?role==`master`].name') | first }}"
+        patroni_master: "{{ (patroni_output_item.content | from_json).members | selectattr('role', 'equalto', 'master') | map(attribute='name') | first }}"
       loop: "{{ patroni_output.results }}"
       loop_control:
         loop_var: patroni_output_item
