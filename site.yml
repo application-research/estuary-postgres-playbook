@@ -91,6 +91,7 @@
       ansible.builtin.package:
         name: acl
         state: present
+      become: true
       when: is_patroni_leader is defined and is_patroni_leader
 
     - name: Create PostgreSQL roles
