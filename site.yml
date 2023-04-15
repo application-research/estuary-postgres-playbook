@@ -66,7 +66,7 @@
   become: true
 
   pre_tasks:
-    - name: Parse Patroni output to find who the current leader is and set it per cluster
+    - name: Parse Patroni output to find who the current primary is and set it per cluster
       delegate_to: localhost
       connection: local
       ansible.builtin.uri:
@@ -78,21 +78,24 @@
       loop_control:
         loop_var: host
 
-    - name: Set fact with leader name per cluster
+    - name: Set fact with primary name per cluster
       delegate_to: localhost
       connection: local
       ansible.builtin.set_fact:
-        patroni_master: "{{ (item.content | from_json).role }}"
+        patroni_primary: "{{ host_item.item }}"
+      when: "(host_item.content | from_json).role == 'master'"
       loop: "{{ patroni_output.results }}"
       loop_control:
-        loop_var: patroni_output_item
-      register: patroni_masters_per_cluster
+        loop_var: host_item
+      register: patroni_primaries_per_cluster
 
-    - name: Set fact with PostgreSQL leaders per cluster
+    - name: Set fact with PostgreSQL primaries per cluster
       delegate_to: localhost
       connection: local
       ansible.builtin.set_fact:
-        postgres_leaders: "{{ patroni_masters_per_cluster.results | items2dict(key_name='item', value_name='ansible_facts.patroni_master') }}"
+        postgres_primaries: "{{ postgres_primaries | default({}) | combine({item.item: item.ansible_facts.patroni_primary}) }}"
+      loop: "{{ patroni_primaries_per_cluster.results }}"
+      when: "item.ansible_facts.patroni_primary is defined"
 
     - name: Print contents of postgres_leaders fact
       delegate_to: localhost
