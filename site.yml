@@ -13,8 +13,9 @@
   become: true # Not needed for root but we won't use root later
 
   vars:
+    etcd_master_group_name: "{{ postgresql_cluster_name  }}"
     etcd_cluster: "{% for host in groups[etcd_master_group_name] %}{{ hostvars[host]['ansible_nodename'] }}={{ etcd_scheme }}{{ hostvars[host]['etcd_address_cluster'] }}:{{ etcd_port_peer }}{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable-line rule:line-length
-    etcd_cluster_name: postgresql
+    etcd_cluster_name: "{{ postgresql_cluster_name  }}"
     etcd_iface_cluster: ens18
 
   roles:
@@ -25,39 +26,23 @@
   hosts: postgresql
   become: true
 
+  pre_tasks:
+    - name: Check if repo-specific secrets file exists
+      delegate_to: localhost
+      ansible.builtin.stat:
+        path: "{{ playbook_dir }}/vars/secrets.yml"
+      register: secrets_file
+
+    - name: If repo-specific secrets file exists, load it in
+      delegate_to: localhost
+      ansible.builtin.include_vars:
+        file: "vars/secrets.yml"
+        name: secrets
+      when: secrets_file.stat.exists
+
   vars_files:
     - vars/secrets.yml
 
-  vars:
-    patroni_system_group: postgres
-    patroni_install_haproxy: false
-    patroni_install_watchdog_loader: false
-    patroni_postgresql_version: 14
-    patroni_etcd_hosts: "{% for host in groups['postgresql'] %}{{ hostvars[host]['inventory_hostname_short'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable-line rule:line-length
-    patroni_etcd_protocol: https
-    patroni_etcd_cacert: "/var/lib/patroni.pki/ca.pem"
-    patroni_etcd_cert: "/var/lib/patroni.pki/{{ inventory_hostname }}.pem"
-    patroni_etcd_key: "/var/lib/patroni.pki/{{ inventory_hostname }}-key.pem"
-    patroni_postgresql_connect_address: "{{ ansible_ens18.ipv4.address }}:5432"
-    patroni_restapi_connect_address: "{{ ansible_ens18.ipv4.address }}:{{ patroni_restapi_port }}"
-    patroni_postgresql_pg_hba:
-      - { type: "local", database: "all", user: "all", method: "peer" }
-      - { type: "host", database: "all", user: "postgres", address: "{{ internal_subnet }}", method: "md5" }
-      - { type: "host", database: "estuary", user: "estuary", address: "{{ internal_subnet }}", method: "scram-sha-256" }
-      - { type: "host", database: "all", user: "all", address: "139.178.81.229/32", method: "scram-sha-256" }
-      - { type: "host", database: "all", user: "all", address: "147.28.148.185/32", method: "scram-sha-256" }
-      - { type: "host", database: "all", user: "all", address: "139.178.81.169/32", method: "scram-sha-256" }
-      - { type: "host", database: "all", user: "all", address: "139.178.81.169/32", method: "scram-sha-256" }
-      - { type: "host", database: "all", user: "all", address: "10.24.6.214/32", method: "scram-sha-256" } # Nautobot server
-      - { type: "host", database: "all", user: "all", address: "10.24.6.217/32", method: "scram-sha-256" } # prod-haproxy01
-      - { type: "host", database: "all", user: "all", address: "10.24.6.216/32", method: "scram-sha-256" } # prod-haproxy02
-      - { type: "host", database: "all", user: "all", address: "10.24.6.215/32", method: "scram-sha-256" } # prod-haproxy03
-      - { type: "host", database: "all", user: "all", address: "{{ internal_subnet }}", method: "ident", options: "map=omicron" }
-      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "{{ internal_subnet }}", method: "md5" } # Allow Patroni replication
-      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "127.0.0.1/32", method: "md5" } # Allow local Patroni access
-    # Careful with this bit.
-    # patroni_bootstrap_dcs_slots:
-    #   - { name: "patroni", type: "physical" }
   roles:
     - patroni_system_user
     - patroni_certs
