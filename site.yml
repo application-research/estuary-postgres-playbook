@@ -82,7 +82,7 @@
       delegate_to: localhost
       connection: local
       ansible.builtin.set_fact:
-        patroni_master: "{{ patroni_output_item.content | from_json['role'] }}"
+        patroni_master: "{{ (patroni_output_item.content | from_json).role }}"
       loop: "{{ patroni_output.results }}"
       loop_control:
         loop_var: patroni_output_item
