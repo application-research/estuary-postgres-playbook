@@ -54,9 +54,6 @@
         name: secrets
       when: secrets_file.stat.exists
 
-  vars_files:
-    - vars/secrets.yml
-
   roles:
     - patroni_system_user
     - patroni_certs
