@@ -4,7 +4,7 @@
     path: /var/lib/patroni.pki/
     owner: postgres
     group: postgres
-    mode: 0750
+    mode: "0750"
     state: directory
 
 - name: Copy CA certificate
@@ -13,7 +13,7 @@
     dest: /var/lib/patroni.pki/ca.pem
     owner: postgres
     group: postgres
-    mode: 0440
+    mode: "0440"
     remote_src: true
 
 - name: Copy node-specific certificate
@@ -22,7 +22,7 @@
     dest: "/var/lib/patroni.pki/{{ inventory_hostname }}.pem"
     owner: postgres
     group: postgres
-    mode: 0440
+    mode: "0440"
     remote_src: true
 
 - name: Copy node-specific key
@@ -31,5 +31,5 @@
     dest: "/var/lib/patroni.pki/{{ inventory_hostname }}-key.pem"
     owner: postgres
     group: postgres
-    mode: 0440
+    mode: "0440"
     remote_src: true

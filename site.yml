@@ -1,6 +1,6 @@
 ---
 - name: Gather special node facts
-  hosts: gather
+  hosts: etcd_master
   become: true
   gather_facts: false
 
@@ -11,12 +11,15 @@
 - name: Create TLS certificates for etcd
   hosts: tls_bastion
 
+  roles:
+    - generate_certs
+
 - name: Deploy etcd on PostgreSQL nodes
   hosts: etcd
   become: true # Not needed for root but we won't use root later
 
   vars:
-    etcd_master_group_name: "{{ postgresql_cluster_name  }}"
+    etcd_master_group_name: "{{ postgresql_cluster_name }}"
     etcd_cluster: "{% for host in groups[etcd_master_group_name] %}{{ hostvars[host]['ansible_nodename'] }}={{ etcd_scheme }}{{ hostvars[host]['etcd_address_cluster'] }}:{{ etcd_port_peer }}{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable-line rule:line-length
     etcd_cluster_name: "{{ postgresql_cluster_name  }}"
     etcd_iface_cluster: ens18
@@ -24,6 +27,14 @@
   roles:
     - role: zorlin.etcd_cluster
       etcd_secure: true
+
+  post_tasks:
+    - name: Remove temporary pki-dir folder from the Ansible controller
+      ansible.builtin.file:
+        path: "{{ lookup('env','HOME') }}/pki-dir/"
+        state: absent
+      delegate_to: localhost
+      connection: local
 
 - name: Deploy PostgreSQL and Patroni on PostgreSQL nodes
   hosts: postgresql

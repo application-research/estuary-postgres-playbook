@@ -1,0 +1,4 @@
+---
+# Expire generated certs in 5 years
+# Defined in terms of number of hours
+etcd_cert_expiry: 43800
