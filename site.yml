@@ -8,6 +8,9 @@
     - name: Gather all facts
       ansible.builtin.setup:
 
+- name: Create TLS certificates for etcd
+  hosts: tls_bastion
+
 - name: Deploy etcd on PostgreSQL nodes
   hosts: etcd
   become: true # Not needed for root but we won't use root later
