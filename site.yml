@@ -71,7 +71,7 @@
       ansible.builtin.set_fact:
         patroni_leader: "{{ patroni_output.stdout | from_json | json_query('members[?role==`master`].name') | first }}"
       vars:
-        patroni_output: "{{ lookup('url', 'http://{{ hostvars[host]['ansible_nodename'] }}:8008/patroni', validate_certs=False) }}"
+        patroni_output: "{{ lookup('url', 'http://{{ hostvars[host][\"ansible_nodename\"] }}:8008/patroni', validate_certs=False) }}"
       loop: "{{ groups[postgresql_cluster_name] }}"
       loop_control:
         loop_var: host
