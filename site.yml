@@ -66,6 +66,11 @@
   become: true
 
   pre_tasks:
+    - name: Install jmespath
+      ansible.builtin.package:
+        name: python3-jmespath
+        state: present
+
     - name: Parse Patroni output to find who the current leader is and set it per cluster
       delegate_to: localhost
       connection: local
