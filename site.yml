@@ -31,7 +31,7 @@
   post_tasks:
     - name: Remove temporary pki-dir folder from the Ansible controller
       ansible.builtin.file:
-        path: "{{ lookup('env','HOME') }}/pki-dir/"
+        path: "{{ lookup('env', 'HOME') }}/pki-dir/"
         state: absent
       delegate_to: localhost
       connection: local
@@ -63,42 +63,51 @@
 
 - name: Ensure PostgreSQL users and databases are created
   hosts: postgresql
-  become: true
 
   pre_tasks:
-    - name: Parse Patroni output to find who the current primary is and set it per cluster
+    - name: Parse Patroni output to find who the current leader is and set it per cluster  # noqa run-once
       delegate_to: localhost
       connection: local
+      run_once: true
       ansible.builtin.uri:
-        url: "http://{{ inventory_hostname }}:8008/patroni"
-        return_content: yes
+        url: "http://{{ item }}:8008/patroni"
+        return_content: true
         validate_certs: false
-      register: patroni_output
+      register: patroni_output_per_host
       loop: "{{ groups[postgresql_cluster_name] }}"
-      loop_control:
-        loop_var: host
 
-    - name: Set fact with primary name per cluster
-      delegate_to: localhost
-      connection: local
+    - name: Find the host with the leader role and set fact  # noqa run-once
+      delegate_to: "{{ item.item }}"
+      delegate_facts: true
+      run_once: true
       ansible.builtin.set_fact:
-        patroni_primary: "{{ host_item }}"
-      when: "(host_item.content | from_json).role == 'master'"
-      loop: "{{ patroni_output.results }}"
-      loop_control:
-        loop_var: host_item
-      register: patroni_primaries_per_cluster
+        is_patroni_leader: true
+      loop: "{{ patroni_output_per_host.results }}"
+      when: "(item.content | from_json).role == 'master'"
+      no_log: true
 
-    - name: Set fact with PostgreSQL primaries per cluster
-      delegate_to: localhost
-      connection: local
-      ansible.builtin.set_fact:
-        postgres_primaries: "{{ postgres_primaries | default({}) | combine({item.item: item.ansible_facts.patroni_primary}) }}"
-      loop: "{{ patroni_primaries_per_cluster.results }}"
-      when: "item.ansible_facts.patroni_primary is defined"
+  tasks:
+    - name: Install acl package so we can become users
+      ansible.builtin.package:
+        name: acl
+        state: present
+      when: is_patroni_leader is defined and is_patroni_leader
 
-    - name: Print contents of postgres_leaders fact
-      delegate_to: localhost
-      connection: local
-      ansible.builtin.debug:
-        msg: "{{ postgres_leaders }}"
+    - name: Create PostgreSQL roles
+      community.postgresql.postgresql_user:
+        name: "{{ item.name }}"
+        password: "{{ item.password }}"
+      loop: "{{ postgresql_users }}"
+      become: true
+      become_user: postgres
+      no_log: true
+      when: is_patroni_leader is defined and is_patroni_leader and postgresql_users is defined
+
+    - name: Create PostgreSQL databases
+      community.postgresql.postgresql_db:
+        name: "{{ item.name }}"
+        owner: "{{ item.owner }}"
+      loop: "{{ postgresql_databases }}"
+      become: true
+      become_user: postgres
+      when: is_patroni_leader is defined and is_patroni_leader and postgresql_databases is defined
