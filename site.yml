@@ -68,21 +68,35 @@
   pre_tasks:
     - name: Parse Patroni output to find who the current leader is and set it per cluster
       delegate_to: localhost
-      ansible.builtin.set_fact:
-        patroni_leader: "{{ patroni_output.stdout | from_json | json_query('members[?role==`master`].name') | first }}"
-      vars:
-        patroni_output: "{{ lookup('url', 'http://{{ hostvars[host][\"ansible_nodename\"] }}:8008/patroni', validate_certs=False) }}"
+      connection: local
+      ansible.builtin.uri:
+        url: "http://{{ hostvars[host]['ansible_nodename'] }}:8008/patroni"
+        return_content: yes
+        validate_certs: false
+      register: patroni_output
+      when: hostvars[host]['patroni_role'] == 'master'
       loop: "{{ groups[postgresql_cluster_name] }}"
       loop_control:
         loop_var: host
-      register: patroni_leaders_per_cluster
 
-    - name: Set fact "PostgreSQL leaders per cluster"
+    - name: Set fact with leader name per cluster
       delegate_to: localhost
+      connection: local
       ansible.builtin.set_fact:
-        postgres_leaders: "{{ patroni_leaders_per_cluster.results | items2dict(key_name='item', value_name='ansible_facts.patroni_leader') }}"
+        patroni_master: "{{ patroni_output_item.content | from_json | json_query('members[?role==`master`].name') | first }}"
+      loop: "{{ patroni_output.results }}"
+      loop_control:
+        loop_var: patroni_output_item
+      register: patroni_masters_per_cluster
 
-    - name: Print current leaders and their cluster names
+    - name: Set fact with PostgreSQL leaders per cluster
       delegate_to: localhost
+      connection: local
+      ansible.builtin.set_fact:
+        postgres_leaders: "{{ patroni_masters_per_cluster.results | items2dict(key_name='item', value_name='ansible_facts.patroni_master') }}"
+
+    - name: Print contents of postgres_leaders fact
+      delegate_to: localhost
+      connection: local
       ansible.builtin.debug:
         msg: "{{ postgres_leaders }}"
