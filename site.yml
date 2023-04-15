@@ -8,7 +8,7 @@
     - name: Gather all facts
       ansible.builtin.setup:
 
-- name: Estuary postgres etcd nodes
+- name: Deploy etcd on PostgreSQL nodes
   hosts: etcd
   become: true # Not needed for root but we won't use root later
 
@@ -22,7 +22,7 @@
     - role: zorlin.etcd_cluster
       etcd_secure: true
 
-- name: Estuary postgres postgres nodes
+- name: Deploy PostgreSQL and Patroni on PostgreSQL nodes
   hosts: postgresql
   become: true
 
