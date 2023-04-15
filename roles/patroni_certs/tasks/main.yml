@@ -9,7 +9,7 @@
 
 - name: Copy CA certificate
   ansible.builtin.copy:
-    src: /var/lib/etcd/postgresql.pki/ca.pem
+    src: "/var/lib/etcd/{{ patroni_etcd_cacert }}.pki/ca.pem"
     dest: /var/lib/patroni.pki/ca.pem
     owner: postgres
     group: postgres
@@ -18,7 +18,7 @@
 
 - name: Copy node-specific certificate
   ansible.builtin.copy:
-    src: "/var/lib/etcd/postgresql.pki/{{ inventory_hostname }}.pem"
+    src: "/var/lib/etcd/{{ patroni_etcd_cacert }}.pki/{{ inventory_hostname }}.pem"
     dest: "/var/lib/patroni.pki/{{ inventory_hostname }}.pem"
     owner: postgres
     group: postgres
@@ -27,7 +27,7 @@
 
 - name: Copy node-specific key
   ansible.builtin.copy:
-    src: "/var/lib/etcd/postgresql.pki/{{ inventory_hostname }}-key.pem"
+    src: "/var/lib/etcd/{{ patroni_etcd_cacert }}.pki/{{ inventory_hostname }}-key.pem"
     dest: "/var/lib/patroni.pki/{{ inventory_hostname }}-key.pem"
     owner: postgres
     group: postgres
