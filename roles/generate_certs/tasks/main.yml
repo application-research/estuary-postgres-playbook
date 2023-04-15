@@ -44,7 +44,7 @@
       set -o pipefail &&
       echo '{"CN":"'{{ item }}'","hosts":[""],"key":{"algo":"rsa","size":2048}}' |
       cfssl gencert -config=ca-config.json -ca=ca.pem -ca-key=ca-key.pem \
-      -hostname="{{ hostvars[item]['ansible_ens18']['ipv4']['address'] }},{{ item[hostvars]['ansible_nodename'] }}" - |
+      -hostname="{{ hostvars[item]['ansible_ens18']['ipv4']['address'] }},{{ hostvars[item]['ansible_nodename'] }}" - |
       cfssljson -bare {{ item }}
     creates: "{{ ansible_user_info.home }}/pki-dir/{{ item }}.pem"
     chdir: "{{ ansible_user_info.home }}/pki-dir/"
