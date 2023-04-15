@@ -70,7 +70,7 @@
       delegate_to: localhost
       connection: local
       ansible.builtin.uri:
-        url: "http://{{ hostvars[host]['ansible_nodename'] }}:8008/patroni"
+        url: "http://{{ inventory_hostname }}:8008/patroni"
         return_content: yes
         validate_certs: false
       register: patroni_output
