@@ -29,10 +29,11 @@
       etcd_secure: true
 
   post_tasks:
-    - name: Remove temporary pki-dir folder from the Ansible controller
+    - name: Remove temporary pki-dir folder from the Ansible controller # noqa run-once
       ansible.builtin.file:
         path: "{{ lookup('env', 'HOME') }}/pki-dir/"
         state: absent
+      run_once: true
       delegate_to: localhost
       connection: local
 
