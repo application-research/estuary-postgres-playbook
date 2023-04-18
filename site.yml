@@ -36,6 +36,7 @@
       run_once: true
       delegate_to: localhost
       connection: local
+      become: false
 
 - name: Deploy PostgreSQL and Patroni on PostgreSQL nodes
   hosts: postgresql
