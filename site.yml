@@ -37,6 +37,7 @@
       delegate_to: localhost
       connection: local
       become: false
+      when: groups['tls_bastion'][0] not in 'localhost'
 
 - name: Deploy PostgreSQL and Patroni on PostgreSQL nodes
   hosts: postgresql
@@ -57,7 +58,6 @@
       become: false
       ansible.builtin.include_vars:
         file: "vars/secrets.yml"
-        name: secrets
       when: secrets_file.stat.exists
 
   roles:
