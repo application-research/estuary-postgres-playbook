@@ -1,5 +1,5 @@
 
-## Quick Start Guide
+# Quick Start Guide
 
 1) Install the Ansible requirements:
 
@@ -56,7 +56,7 @@ patroni_postgresql_pg_hba:                                              # This s
 
 
 5) Run the playbook against your chosen inventory:
-`$ ansible-playbook -v -i ./inventories/pchq site.yml`
+`$ ansible-playbook -v -i ./inventories/prod site.yml`
 
 or with an escalation password if needed:
-`$ ansible-playbook -i ./inventories/pchq site.yml --ask-become-pass`
+`$ ansible-playbook -i ./inventories/prod site.yml --ask-become-pass`
