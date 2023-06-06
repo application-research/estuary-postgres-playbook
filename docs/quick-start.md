@@ -13,13 +13,6 @@
 localhost ansible_connection=local
 ```
 
-Also note if you're using localhost here you'll need to set a sudo alias:
-
-```
-# Cmnd alias specification
-pcadmin ALL=(ALL) NOPASSWD: /usr/bin/ansible-playbook
-```
-
 
 3) You must define a seperate inventory group for the {{ postgresql_cluster_name }} variable, for example if it's:
 `postgresql_cluster_name: prod_estuary`
