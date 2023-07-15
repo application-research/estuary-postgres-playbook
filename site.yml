@@ -1,154 +1,118 @@
 ---
 - name: Gather special node facts
-  hosts: gather
+  hosts: etcd_master
   become: true
   gather_facts: false
-  remote_user: root
 
   tasks:
     - name: Gather all facts
       ansible.builtin.setup:
 
-# - name: Estuary postgres loadbalancer nodes
-#   hosts: loadbalancer
-#   become: true # Not needed for root but we won't use root later
-#   remote_user: root
+- name: Create TLS certificates for etcd
+  hosts: tls_bastion
 
-#   vars_files:
-#     - vars/secrets.yml
+  roles:
+    - generate_certs
 
-#   # pre_tasks:
-#   #   - name: Gather facts
-#   #     ansible.builtin.setup:
-#   #     delegate_to: "{{ item }}"
-#   #     with_items: "{{ groups['postgresql'] }}"
-
-#   vars:
-#     corosync_expected_votes: "{{ ( groups[pacemaker_cluster_group]|count /2 ) | round (0, 'ceil') | int }}"
-#     corosync_bindnet_interface: 'bond0_0'
-#     corosync_cluster_name: 'loadbalancer'
-#     pacemaker_cluster_group: 'loadbalancer'
-#     pacemaker_cluster_constraints:
-#       - constraint: 'colocation'
-#         action: 'add'
-#         source_resource_id: 'virtual_ip'
-#         target_resource_id: 'elastic_ip_metal'
-#         score: 'INFINITY'
-#       - constraint: 'colocation'
-#         action: 'add'
-#         source_resource_id: 'virtual_ip_public'
-#         target_resource_id: 'elastic_ip_metal_public'
-#         score: 'INFINITY'
-#     pacemaker_cluster_resources:
-#       - resource_id: 'virtual_ip'
-#         action: 'create'
-#         provider: 'ocf:heartbeat:IPaddr2'
-#         options:
-#           - 'ip={{ elastic_ip_lb }}'
-#           - 'cidr_netmask=32'
-#           - 'nic=bond0'
-#         op: 'monitor'
-#         op_options:
-#           - 'interval=8s'
-#       - resource_id: 'elastic_ip_metal'
-#         action: 'create'
-#         provider: 'ocf:equinix:equinix-elastic-ip'
-#         options:
-#           - 'ip={{ elastic_ip_lb }}'
-#           - 'subnet={{ elastic_ip_subnet }}'
-#         op: 'monitor'
-#         op_options:
-#           - 'timeout=60s interval=30s'
-#       - resource_id: 'virtual_ip_public'
-#         action: 'create'
-#         provider: 'ocf:heartbeat:IPaddr2'
-#         options:
-#           - 'ip={{ elastic_ip_lb_public }}'
-#           - 'cidr_netmask=32'
-#           - 'nic=bond0'
-#         op: 'monitor'
-#         op_options:
-#           - 'interval=8s'
-#       - resource_id: 'elastic_ip_metal_public'
-#         action: 'create'
-#         provider: 'ocf:equinix:equinix-elastic-ip-public'
-#         options:
-#           - 'ip={{ elastic_ip_lb_public }}'
-#         op: 'monitor'
-#         op_options:
-#           - 'timeout=60s interval=30s'
-#       - resource_id: 'loadbalancer'
-#         action: 'create'
-#         provider: 'lsb:haproxy'
-#         op: 'monitor'
-#         op_options:
-#           - 'timeout=5s'
-#           - 'interval=5s'
-#           - 'clone'
-#     pacemaker_cluster_settings:
-#       - property: 'start-failure-is-fatal'
-#         value: 'false'
-#       - property: 'pe-warn-series-max'
-#         value: 1000
-#       - property: 'pe-input-series-max'
-#         value: 1000
-#       - property: 'pe-error-series-max'
-#         value: 1000
-#       - property: 'cluster-recheck-interval'
-#         value: 5min
-#   roles:
-#     - haproxy
-#     - { role: equinix_uuid, when: not equinix_uuid | bool }
-#     - equinix_elastic_ip
-#     - zorlin.pacemaker
-
-- name: Estuary postgres etcd nodes
+- name: Deploy etcd on PostgreSQL nodes
   hosts: etcd
   become: true # Not needed for root but we won't use root later
-  remote_user: root
 
   vars:
+    etcd_master_group_name: "{{ postgresql_cluster_name }}"
     etcd_cluster: "{% for host in groups[etcd_master_group_name] %}{{ hostvars[host]['ansible_nodename'] }}={{ etcd_scheme }}{{ hostvars[host]['etcd_address_cluster'] }}:{{ etcd_port_peer }}{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable-line rule:line-length
-    etcd_cluster_name: postgresql
-    etcd_iface_cluster: bond0_0
+    etcd_cluster_name: "{{ postgresql_cluster_name  }}"
+    etcd_iface_cluster: ens18
 
   roles:
     - role: zorlin.etcd_cluster
       etcd_secure: true
 
-- name: Estuary postgres postgres nodes
+  post_tasks:
+    - name: Remove temporary pki-dir folder from the Ansible controller # noqa run-once
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/pki-dir/"
+        state: absent
+      run_once: true
+      delegate_to: localhost
+      connection: local
+      become: false
+      when: groups['tls_bastion'][0] not in 'localhost'
+
+- name: Deploy PostgreSQL and Patroni on PostgreSQL nodes
   hosts: postgresql
-  become: true # Not needed for root but we won't use root later
-  remote_user: root
+  become: true
 
-  vars_files:
-    - vars/secrets.yml
+  pre_tasks:
+    - name: Check if repo-specific secrets file exists
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.stat:
+        path: "{{ playbook_dir }}/vars/secrets.yml"
+      register: secrets_file
 
-  vars:
-    patroni_system_group: postgres
-    patroni_install_haproxy: false
-    patroni_install_watchdog_loader: false
-    patroni_postgresql_version: 14
-    patroni_etcd_hosts: "{% for host in groups['postgresql'] %}{{ hostvars[host]['ansible_bond0_0']['ipv4']['address'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable-line rule:line-length
-    patroni_etcd_protocol: https
-    patroni_etcd_cacert: "/var/lib/patroni.pki/ca.pem"
-    patroni_etcd_cert: "/var/lib/patroni.pki/{{ inventory_hostname }}.pem"
-    patroni_etcd_key: "/var/lib/patroni.pki/{{ inventory_hostname }}-key.pem"
-    patroni_postgresql_connect_address: "{{ ansible_bond0_0.ipv4.address }}:5432"
-    patroni_restapi_connect_address: "{{ ansible_bond0_0.ipv4.address }}:{{ patroni_restapi_port }}"
-    patroni_postgresql_pg_hba:
-      - { type: "local", database: "all", user: "all", method: "peer" }
-      - { type: "host", database: "all", user: "postgres", address: "{{ internal_subnet }}", method: "md5" }
-      - { type: "host", database: "estuary", user: "estuary", address: "{{ internal_subnet }}", method: "scram-sha-256" }
-      - { type: "host", database: "all", user: "all", address: "{{ internal_subnet }}", method: "ident", options: "map=omicron" }
-      - { type: "host", database: "all", user: "all", address: "139.178.81.229/32", method: "scram-sha-256" }
-      - { type: "host", database: "all", user: "all", address: "147.28.148.185/32", method: "scram-sha-256" }
-      - { type: "host", database: "all", user: "all", address: "139.178.81.169/32", method: "scram-sha-256" }
-      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "{{ internal_subnet }}", method: "md5" }
-      - { type: "host", database: "replication", user: "{{ patroni_replication_username }}", address: "127.0.0.1/32", method: "md5" }
-    patroni_bootstrap_dcs_slots:
-      - { name: "patroni", type: "physical" }
+    - name: If repo-specific secrets file exists, load it in
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.include_vars:
+        file: "vars/secrets.yml"
+      when: secrets_file.stat.exists
+
   roles:
     - patroni_system_user
     - patroni_certs
     - role: zorlin.patroni
+
+- name: Ensure PostgreSQL users and databases are created
+  hosts: postgresql
+
+  pre_tasks:
+    - name: Parse Patroni output to find who the current leader is and set it per cluster  # noqa run-once
+      delegate_to: localhost
+      connection: local
+      run_once: true
+      ansible.builtin.uri:
+        url: "http://{{ item }}:8008/patroni"
+        return_content: true
+        validate_certs: false
+      register: patroni_output_per_host
+      loop: "{{ groups[postgresql_cluster_name] }}"
+
+    - name: Find the host with the leader role and set fact  # noqa run-once
+      delegate_to: "{{ item.item }}"
+      delegate_facts: true
+      run_once: true
+      ansible.builtin.set_fact:
+        is_patroni_leader: true
+      loop: "{{ patroni_output_per_host.results }}"
+      when: "(item.content | from_json).role == 'master'"
+      no_log: true
+
+  tasks:
+    - name: Install acl package so we can become users
+      ansible.builtin.package:
+        name: acl
+        state: present
+      become: true
+      when: is_patroni_leader is defined and is_patroni_leader
+
+    - name: Create PostgreSQL roles
+      community.postgresql.postgresql_user:
+        name: "{{ item.name }}"
+        password: "{{ item.password }}"
+      loop: "{{ postgresql_users }}"
+      become: true
+      become_user: postgres
+      no_log: true
+      when: is_patroni_leader is defined and is_patroni_leader and postgresql_users is defined
+
+    - name: Create PostgreSQL databases
+      community.postgresql.postgresql_db:
+        name: "{{ item.name }}"
+        owner: "{{ item.owner }}"
+      loop: "{{ postgresql_databases }}"
+      become: true
+      become_user: postgres
+      when: is_patroni_leader is defined and is_patroni_leader and postgresql_databases is defined

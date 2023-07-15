@@ -1,0 +1,68 @@
+---
+- name: Grab info about the user we're connected as
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    state: present
+  register: ansible_user_info
+
+- name: Fetch the latest version of cfssl
+  ansible.builtin.get_url:
+    url: https://github.com/cloudflare/cfssl/releases/download/v1.6.4/cfssl_1.6.4_linux_amd64
+    dest: /usr/local/bin/cfssl
+    mode: "0755"
+  become: true
+
+- name: Fetch the latest version of cfssljson
+  ansible.builtin.get_url:
+    url: https://github.com/cloudflare/cfssl/releases/download/v1.6.4/cfssljson_1.6.4_linux_amd64
+    dest: /usr/local/bin/cfssljson
+    mode: "0755"
+  become: true
+
+- name: Create PKI directory on bastion host
+  ansible.builtin.file:
+    path: "{{ ansible_user_info.home }}/pki-dir/"
+    state: directory
+    mode: "0755"
+
+- name: Use cfssl to generate a Certificate Authority
+  ansible.builtin.shell:
+    cmd: set -o pipefail && echo '{"CN":"CA","key":{"algo":"rsa","size":2048}}' | cfssl gencert -initca - | cfssljson -bare ca -
+    chdir: "{{ ansible_user_info.home }}/pki-dir/"
+    executable: /bin/bash
+    creates: "{{ ansible_user_info.home }}/pki-dir/ca.pem"
+
+- name: Create CA configuration
+  ansible.builtin.template:
+    src: ca-config.json.j2
+    dest: "{{ ansible_user_info.home }}/pki-dir/ca-config.json"
+    mode: "0644"
+
+- name: Create certificates for each host
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail &&
+      echo '{"CN":"'{{ item }}'","hosts":[""],"key":{"algo":"rsa","size":2048}}' |
+      cfssl gencert -config=ca-config.json -ca=ca.pem -ca-key=ca-key.pem \
+      -hostname="{{ hostvars[item]['ansible_ens18']['ipv4']['address'] }},{{ hostvars[item]['ansible_nodename'] }}" - |
+      cfssljson -bare {{ item }}
+    creates: "{{ ansible_user_info.home }}/pki-dir/{{ item }}.pem"
+    chdir: "{{ ansible_user_info.home }}/pki-dir/"
+    executable: /bin/bash
+  when: "'ansible_ens18' in hostvars[item]"
+  with_items: "{{ groups['etcd_master'] }}"
+
+- name: Create a temporary pki-dir folder on the Ansible controller
+  ansible.builtin.file:
+    path: "{{ lookup('env','HOME') }}/pki-dir/"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+  connection: local
+
+- name: Fetch certificates from bastion host
+  ansible.posix.synchronize:
+    src: "{{ ansible_user_info.home }}/pki-dir/"
+    dest: "{{ lookup('env','HOME') }}/pki-dir/"
+    mode: "pull"
+    recursive: true
